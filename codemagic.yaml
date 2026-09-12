@@ -1,0 +1,48 @@
+workflows:
+  android-workflow:
+    name: Build Android APK
+    max_build_duration: 120
+    environment:
+      android_signing:
+        - keystore_reference
+      vars:
+        UNITY_VERSION: "2022.3.17f1"
+        UNITY_PATH: "/Applications/Unity/Hub/Editors/$UNITY_VERSION/Unity.app/Contents/MacOS/Unity"
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch:
+        include_patterns:
+          - develop
+          - main
+    scripts:
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$FCI_BUILD_DIR/local.properties"
+      - name: Build APK with Unity
+        script: |
+          $UNITY_PATH -quit -batchmode -nographics \
+            -logFile - \
+            -projectPath "$FCI_BUILD_DIR" \
+            -executeMethod BuildScript.BuildAndroidAPK \
+            -androidVersionCode $(($(date +%s) / 60)) \
+            -androidVersionName "1.0.0"
+      - name: Copy APK to artifacts
+        script: |
+          mkdir -p $FCI_BUILD_DIR/build/outputs
+          find $FCI_BUILD_DIR -name "*.apk" -type f -exec cp {} $FCI_BUILD_DIR/build/outputs/ \;
+    artifacts:
+      - build/outputs/**/*.apk
+    publishing:
+      github_releases:
+        release: true
+        doc_type: markdown
+        document_type: markdown
+        document_title: "Kids Mobile Game Build $CODEMAGIC_BUILD_NUMBER"
+      email:
+        recipients:
+          - user@example.com
+        notify:
+          success: true
+          failure: true

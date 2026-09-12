@@ -33,10 +33,3 @@ workflows:
           fi
     artifacts:
       - build/android/**/*.apk
-    publishing:
-      email:
-        recipients:
-          - $CODEMAGIC_EMAIL
-        notify:
-          success: true
-          failure: true

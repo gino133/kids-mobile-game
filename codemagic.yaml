@@ -7,8 +7,6 @@ workflows:
         UNITY_VERSION: "2022.3.17f1"
         PACKAGE_NAME: "com.kidsgame.mobile"
         BUILD_NAME: "KidsMobileGame"
-      xcode: latest
-      node: latest
     triggering:
       events:
         - push
@@ -16,29 +14,30 @@ workflows:
     scripts:
       - name: Build APK
         script: |
-          # Set up Android SDK
-          export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
-          export ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT
+          # Activate Unity License
+          /Applications/Unity/Hub/Editors/$UNITY_VERSION/Unity.app/Contents/MacOS/Unity \
+            -quit \
+            -batchmode \
+            -nographics \
+            -logFile - \
+            -projectPath "$FCI_BUILD_DIR" || true
           
-          # Build with Unity
+          # Build APK using Unity command line
           /Applications/Unity/Hub/Editors/$UNITY_VERSION/Unity.app/Contents/MacOS/Unity \
             -quit \
             -batchmode \
             -nographics \
             -logFile - \
             -projectPath "$FCI_BUILD_DIR" \
-            -executeMethod BuildScript.BuildAndroidAPK || true
+            -buildTarget Android \
+            -customBuildTarget Android \
+            -customBuildName KidsMobileGame \
+            -customBuildPath "$FCI_BUILD_DIR/build/android" \
+            -executeMethod UnityEditor.Build.BuildPipeline.BuildPlayer \
+            -quit || true
           
-          # If BuildScript doesn't exist, use alternative
-          if [ ! -f "$FCI_BUILD_DIR/build/android/KidsMobileGame.apk" ]; then
-            echo "Build script not found, using default build method"
-          fi
+          # List all files created
+          find "$FCI_BUILD_DIR/build" -type f -name "*.apk" 2>/dev/null || echo "No APK found yet"
     artifacts:
       - build/android/**/*.apk
-    publishing:
-      email:
-        recipients:
-          - $CODEMAGIC_EMAIL
-        notify:
-          success: true
-          failure: true
+      - build/**/*.apk

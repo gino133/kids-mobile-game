@@ -11,9 +11,6 @@ workflows:
       events:
         - push
         - pull_request
-      branch:
-        - develop
-        - main
     scripts:
       - name: Build APK
         script: |

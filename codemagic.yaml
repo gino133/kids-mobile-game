@@ -7,16 +7,13 @@ workflows:
         UNITY_VERSION: "2022.3.17f1"
         PACKAGE_NAME: "com.kidsgame.mobile"
         BUILD_NAME: "KidsMobileGame"
-      xcode: latest
-      node: latest
     triggering:
       events:
         - push
         - pull_request
       branch:
-        include_patterns:
-          - develop
-          - main
+        - develop
+        - main
     scripts:
       - name: Build APK
         script: |
